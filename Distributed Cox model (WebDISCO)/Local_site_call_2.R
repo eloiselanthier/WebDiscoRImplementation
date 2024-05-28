@@ -74,10 +74,10 @@ if (manualk >= 0) {
 
 # Verifying that a valid node number could be allocated manually or automatically
 if (k >= 0) {
-  if (!file.exists("Times_2_output.csv")) {           # If no files found --- call first function
+  if (!file.exists(paste0("Times_", manualk ,"_output.csv"))) {           # If no files found --- call first function
     source("Local_site_core_times.R")
     data_event_times(manualwd, k)
-  } else if (!file.exists("Dik2.csv")) {              # If global times file exists -- call second function
+  } else if (!file.exists(paste0("Dik", manualk ,".csv"))) {              # If global times file exists -- call second function
     source("Local_site_core_params.R")
     parameters_sites(manualwd, k, nbBetas)
   } else if (file.exists("Beta_1_output.csv")) {        # If beta file exists --- call third function

@@ -1,17 +1,17 @@
-Comment utiliser le code:
+Instructions to run the code:
 
 - Run the files Local_site_call_x.R (for all x) to initialize local times.
 - Run the file Global_server.R to initialize global times.
 
-- Run the files Local_site_call_x.R (for all x) to initialize parameters (Dik, Rik).
+- Run the files Local_site_call_x.R (for all x) to initialize parameters (Dik, Rik, sumZr).
 - Run the file Global_server.R to initialize sum of Zr and beta.
 
-- Run the files Local_site_call_x.R (for all x) to do a first iteration.
-- Run the file Global_server.R to calculate new beta.
-
-Repeat the last process in a loop to converge eventually.
+- Run the files Local_site_call_x.R (for all x) to do an iteration.
+- Run the file Global_server.R to calculate a new beta.
+- Repeat both steps to do more iterations.
 
 To start over, it is important to delete all "output" files.
 
-Ajust the number of files depending on number of sites and number of betas to calculate.
-Number of betas to calculate should be written at the header of all local files and global server.
+Ajust the number of files "Local_site_call_x.R" depending on number of sites, and make sure to change the value of manualk to the number of the site.
+
+The number of betas to calculate should be written at the header of all local files and global server.
