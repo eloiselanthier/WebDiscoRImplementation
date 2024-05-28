@@ -1,15 +1,15 @@
 Answer should be:
 
-                coef
-age        1.065e-02 
-sex       -5.509e-01  
-ph.ecog    7.342e-01  
-ph.karno   2.246e-02  
-pat.karno -1.242e-02
-meal.cal   3.329e-05  
-wt.loss   -1.433e-02  
+                coef  exp(coef)   se(coef)      z Pr(>|z|)   
+age        1.080e-02  1.011e+00  1.160e-02  0.931  0.35168   
+sex       -5.536e-01  5.749e-01  2.016e-01 -2.746  0.00603 **
+ph.ecog    7.395e-01  2.095e+00  2.250e-01  3.287  0.00101 **
+ph.karno   2.244e-02  1.023e+00  1.123e-02  1.998  0.04575 * 
+pat.karno -1.207e-02  9.880e-01  8.116e-03 -1.488  0.13685   
+meal.cal   2.835e-05  1.000e+00  2.594e-04  0.109  0.91298   
+wt.loss   -1.420e-02  9.859e-01  7.766e-03 -1.828  0.06748 . 
 
-I get:
+I get (with 4 iterations, intial betas = 0):
               x
 1  1.078695e-02
 2 -5.526142e-01
@@ -21,6 +21,4 @@ I get:
 
 Very close, except meal.cal
 
-Might be explained by difference in data. 
-The exemple says they have 121 events, while I have only 111.
-All incomplete data was not used.
+All incomplete data was discarted.
