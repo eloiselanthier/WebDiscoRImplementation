@@ -1,0 +1,26 @@
+Answer should be:
+
+                coef
+age        1.065e-02 
+sex       -5.509e-01  
+ph.ecog    7.342e-01  
+ph.karno   2.246e-02  
+pat.karno -1.242e-02
+meal.cal   3.329e-05  
+wt.loss   -1.433e-02  
+
+I get:
+              x
+1  1.078695e-02
+2 -5.526142e-01
+3  7.388414e-01
+4  2.241838e-02
+5 -1.205260e-02
+6  2.827146e-05
+7 -1.413819e-02
+
+Very close, except meal.cal
+
+Might be explained by difference in data. 
+The exemple says they have 121 events, while I have only 111.
+All incomplete data was not used.

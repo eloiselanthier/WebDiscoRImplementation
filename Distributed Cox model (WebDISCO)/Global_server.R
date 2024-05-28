@@ -13,7 +13,7 @@ library("survminer")
 manualwd <- -1
 
 # Number of parameters (covariates)
-nbBetas <- 2
+nbBetas <- 7
 
 if (manualwd != 1) {
   
@@ -117,8 +117,8 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
     }
     
     # Calculate first derivative
-    ZrExp_Exp <- sumZqExpGlobal/cbind(sumExpGlobal, sumExpGlobal)
-    Norm_ZrExp_Exp <- cbind(normDikGlobal,normDikGlobal)  * ZrExp_Exp
+    ZrExp_Exp <- sumZqExpGlobal/do.call(cbind, replicate(nbBetas, sumExpGlobal, simplify = FALSE))
+    Norm_ZrExp_Exp <- do.call(cbind, replicate(nbBetas, normDikGlobal, simplify = FALSE)) * ZrExp_Exp
     sumDi_Norm_ZrExp_Exp <- colSums(Norm_ZrExp_Exp)
     
     lr_beta = sumZrGlobal_int - sumDi_Norm_ZrExp_Exp

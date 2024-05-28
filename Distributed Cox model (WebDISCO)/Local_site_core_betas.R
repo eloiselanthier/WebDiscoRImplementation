@@ -60,7 +60,12 @@ calculate_local_values <- function(man_wd=-1,nodeid=-1, nodebetas=-1, nodenumber
     indices <- unlist(Rik[i, ])
     indices <- as.numeric(indices[indices != ""])
     for (j in seq_along(indices)) {
-      z <- c(node_data$age[indices[j]], node_data$sex[indices[j]])
+      z <- c()
+      for (x in 3:ncol(node_data)) {
+        value <- node_data[indices[j], x]
+        value <- ifelse(is.na(value), 0, value)       # If NA, replaced by 0 (might induce errors)
+        z <- c(z, value)
+      }
       sumExp[i] <- sumExp[i] + (exp(sum(beta * z)))
       sumZqExp[i, ] <- sumZqExp[i, ] + z * (exp(sum(beta * z)))
       sumZqZrExp[, , i] <- sumZqZrExp[, , i] + z %*% t(z) * exp(sum(beta * z))

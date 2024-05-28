@@ -66,7 +66,8 @@ parameters_sites <- function(man_wd=-1,nodeid=-1, nodebetas=-1) {
   for (i in seq_along(Dik)) {
     indices <- Dik[[i]]
     for (x in 1:nbBetas) {
-      sumZrh[i, x] <- sum(node_data[[3 + x - 1]][indices])
+      current_sum <- sum(node_data[[3 + x - 1]][indices])           
+      sumZrh[i, x] <- ifelse(is.na(current_sum), 0, current_sum)      # if NA, put = 0 (might induce errors)
     }
   }
   
