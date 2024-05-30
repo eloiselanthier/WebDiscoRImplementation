@@ -2,8 +2,6 @@
 library("survival")
 library("survminer")
 
-# ON RECHERCHE BETA = (0.011, -0.553) OU (0.019, -0.53) OU (0.017, -0.513) je suis pas certaine
-
 # Data
 data("lung")
 head(lung)
