@@ -49,7 +49,7 @@ parameters_sites <- function(man_wd=-1,nodeid=-1, nodebetas=-1) {
   
   Dik <- vector("list", length(Dlist))
   for (i in seq_along(Dlist)) {
-    indices <- which(node_data$time == Dlist[i] & node_data$status == 2)
+    indices <- which(node_data$time == Dlist[i] & node_data$status == 1)
     if (length(indices) > 0) {
       Dik[[i]] <- indices
     } else {
@@ -67,7 +67,7 @@ parameters_sites <- function(man_wd=-1,nodeid=-1, nodebetas=-1) {
     indices <- Dik[[i]]
     for (x in 1:nbBetas) {
       current_sum <- sum(node_data[[3 + x - 1]][indices])           
-      sumZrh[i, x] <- ifelse(is.na(current_sum), 0, current_sum)      # if NA, put = 0 (might induce errors)
+      sumZrh[i, x] <- ifelse(is.na(current_sum), 0, current_sum)      # if NA, put = 0 (might induce errors, but avoids crashing)
     }
   }
   

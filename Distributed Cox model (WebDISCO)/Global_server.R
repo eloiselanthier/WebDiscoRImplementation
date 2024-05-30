@@ -13,7 +13,7 @@ library("survminer")
 manualwd <- -1
 
 # Number of parameters (covariates)
-nbBetas <- 7
+nbBetas <- 3
 
 if (manualwd != 1) {
   

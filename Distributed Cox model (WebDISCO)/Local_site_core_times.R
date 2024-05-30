@@ -44,7 +44,7 @@ data_event_times <- function(man_wd=-1,nodeid=-1) {
   
   # Read data, get event times, write in csv
   node_data <- read.csv(paste0("Data_site_", k, ".csv"))
-  event_times <- unique(node_data$time[node_data$status == 2])
+  event_times <- unique(node_data$time[node_data$status == 1])
   write.csv(event_times, file=paste0("Times_",k,"_output.csv"),row.names = FALSE,na="")
 
   rm(list = ls())
