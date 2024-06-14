@@ -26,7 +26,7 @@ min_total <- min(min(data1$time), min(data2$time), min(data3$time))
 max_total <- max(max(data1$time), max(data2$time), max(data3$time))
 
 # Define initial interval size
-intervalIncrement <- 1
+intervalIncrement <- 0.001
 intervalStart <- min_total
 intervalEnd <- intervalStart
 
@@ -91,11 +91,14 @@ dataInt <- rbind(data1, data2, data3)
 dataInt <- dataInt[order(dataInt$time), ]
 
 # Error
-res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
-res.cox.Int <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataInt)
+#res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
+#res.cox.Int <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataInt)
 
-#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
-#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataInt)
+#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataOG)
+#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataInt)
+
+res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
+res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataInt)
 
 differences <- coef(res.cox.OG) - coef(res.cox.Int)
 error <- sum(abs((differences / coef(res.cox.OG)) * 100))

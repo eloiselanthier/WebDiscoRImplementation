@@ -3,7 +3,7 @@ library("survival")
 library("survminer")
 library("dplyr")
 
-fileNb <- 2
+fileNb <- 4
 varname <- paste("data", fileNb, sep = "") # Equivalent to data1
 
 dataCSV <- read.csv(paste("Data_site_", fileNb, ".csv", sep = ""))
@@ -11,8 +11,8 @@ assign(varname, dataCSV) # data1 <- dataCSV
 dataOG <- dataCSV
 
 # Initialize Parameters
-lowcutoff <- 1.368301
-cutoff <- 13.96353
+lowcutoff <- 8
+cutoff <- 19
 
 # Functions
 create_intervals <- function(min_array, max_array, max_difference) {

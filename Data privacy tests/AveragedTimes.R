@@ -46,14 +46,16 @@ data <- rbind(data1, data2, data3)
 data <- data[order(data$time), ]
 
 # Original data
-res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
+#res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
 #res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataOG)
+res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
 res.cox.OG
 summary(res.cox.OG)
 
 # Data intervals
-res.cox.moy <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, data)
+#res.cox.moy <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, data)
 #res.cox.moy <- coxph(Surv(time, status) ~ X1 + X2 + X3, data)
+res.cox.moy <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, data)
 res.cox.moy
 summary(res.cox.moy)
 

@@ -26,8 +26,8 @@ print(combined_plot)
 dataOG <- rbind(data1, data2, data3)
 
 # Constant intervals - before cutoff
-lowcutoff <- 150
-cutoff <- 580
+lowcutoff <- 3
+cutoff <- 19
 
 data1 <- data1[data1$time <= lowcutoff, ]
 data1 <- data1[order(data1$time), ]
@@ -239,31 +239,19 @@ dataInt <- rbind(data1, data2, data3)
 dataInt <- dataInt[order(dataInt$time), ]
 
 # Original data
-res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
-#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
+#res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
+#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataOG)
+res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
 res.cox.OG
 summary(res.cox.OG)
 
 
 # Data intervals
-res.cox.Int <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataInt)
-#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataInt)
+#res.cox.Int <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataInt)
+#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataInt)
+res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataInt)
 res.cox.Int
 summary(res.cox.Int)
-
-# Sum de l'erreur relative
-coefficients.OG <- coef(res.cox.OG)
-coefficients.Int <- coef(res.cox.Int)
-differences <- coefficients.OG - coefficients.Int
-percentage_errors <- (differences / coefficients.OG) * 100
-absolute_errors <- abs(percentage_errors)
-error <- sum(absolute_errors)
-error
-
-
-
-
-
 
 # Create histogram for the 'time' column in dataInt
 plot_dataInt_histogram <- ggplot(dataInt, aes(x = time)) +
@@ -273,3 +261,12 @@ plot_dataInt_histogram <- ggplot(dataInt, aes(x = time)) +
 
 # Display the plot
 print(plot_dataInt_histogram)
+
+# Sum de l'erreur relative
+coefficients.OG <- coef(res.cox.OG)
+coefficients.Int <- coef(res.cox.Int)
+differences <- coefficients.OG - coefficients.Int
+percentage_errors <- (differences / coefficients.OG) * 100
+absolute_errors <- abs(percentage_errors)
+error <- sum(absolute_errors)
+error
