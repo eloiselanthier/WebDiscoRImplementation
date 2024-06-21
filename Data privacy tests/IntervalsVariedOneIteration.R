@@ -91,8 +91,9 @@ while (position < max_total) {
 
 intervals <- append(intervals,max_total)
 
-# À revérifier... dans intervals, en ce moment c'est pas les valeurs, c'est les positions
-# Si pas est pas de 1, à checker aussi
+# À revérifier... dans intervals, en ce moment c'est pas les valeurs, c'est les positions dans la liste
+# Si le "pas" n'est pas 1, à checker aussi
+# Dernier interval à check
 
 
 
