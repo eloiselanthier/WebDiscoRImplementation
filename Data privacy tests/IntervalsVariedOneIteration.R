@@ -26,6 +26,8 @@ interval_size <- 1
 increase <- 1
 j <- 1
 
+interval_size_OG <- interval_size
+
 left_border <- min_total
 right_border <- min_total + interval_size
 
@@ -72,33 +74,69 @@ while (interval_size < (max_total-min_total) ){
 
 binary_output_global <- binary_output_site1 + binary_output_site2 + binary_output_site3
 
-intervals <- list(min_total)
+intervals <- list()
 
 position <- 1
+value <- min_total
 nbRows <- nrow(binary_output_global)
+done <- FALSE
 
-while (position < max_total) {
+while (position < ncol(binary_output_global)) {
   for (i in 1:nbRows) {
-    if (binary_output_global[i, position] == 3) {
-      intervals <- append(intervals, binary_output_global[i, position])
-      position <- position + (interval_size + i * increase)
-      break
+    if (done == FALSE){
+      if (binary_output_global[i, position] == 3) {
+        value <- value + (interval_size_OG + (i-1) * increase)
+        intervals <- append(intervals, value)
+        position <- floor((value - min_total)/interval_size_OG)
+        done <- TRUE
+      }
+      if (i == nbRows){ # If nothing else, stop the loop
+        position <- ncol(binary_output_global)
+      }
     }
-    # If nothing else, stop the loop
-    position <- max_total
   }
+  done <- FALSE
 }
 
-intervals <- append(intervals,max_total)
+intervals <- append(intervals,max_total+1)
+# intervals <- intervals[-(length(intervals) - 1)]    # Dernier intervalle merged avec l'avant dernier
 
-# À revérifier... dans intervals, en ce moment c'est pas les valeurs, c'est les positions dans la liste
-# Si le "pas" n'est pas 1, à checker aussi
+data1$time <- cut(data1$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
+data2$time <- cut(data2$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
+data3$time <- cut(data3$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
+
 # Dernier interval à check
 
 
 
 
+# Données finales
+dataInt <- rbind(data1, data2, data3)
+dataInt <- dataInt[order(dataInt$time), ]
 
+# Error
+res.cox.OG <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataOG)
+res.cox.Int <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, dataInt)
+
+#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataOG)
+#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3, dataInt)
+
+#res.cox.OG <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataOG)
+#res.cox.Int <- coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5 + X6, dataInt)
+
+differences <- coef(res.cox.OG) - coef(res.cox.Int)
+error <- sum(abs((differences / coef(res.cox.OG)) * 100))
+error
+
+
+# Create histogram for the 'time' column in dataInt
+plot_dataInt_histogram <- ggplot(dataInt, aes(x = time)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Time", x = "Time", y = "Count") +
+  theme_minimal()
+
+# Display the plot
+print(plot_dataInt_histogram)
 
 
 
