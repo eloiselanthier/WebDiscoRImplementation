@@ -87,7 +87,7 @@ while (position < ncol(binary_output_global)) {
       if (binary_output_global[i, position] == 3) {
         value <- value + (interval_size_OG + (i-1) * increase)
         intervals <- append(intervals, value)
-        position <- floor((value - min_total)/interval_size_OG)
+        position <- floor((value - min_total)/pas)
         done <- TRUE
       }
       if (i == nbRows){ # If nothing else, stop the loop
@@ -104,11 +104,6 @@ intervals <- append(intervals,max_total+1)
 data1$time <- cut(data1$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
 data2$time <- cut(data2$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
 data3$time <- cut(data3$time, breaks = c(-Inf, intervals), labels = FALSE, right = FALSE)
-
-# Dernier interval à check
-
-
-
 
 # Données finales
 dataInt <- rbind(data1, data2, data3)
