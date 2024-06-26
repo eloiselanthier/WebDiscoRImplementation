@@ -1,0 +1,17 @@
+data1 <- read.csv("Data_site_1.csv")
+data2 <- read.csv("Data_site_2.csv")
+data3 <- read.csv("Data_site_3.csv")
+data4 <- read.csv("Data_site_4.csv")
+data5 <- read.csv("Data_site_5.csv")
+
+data1$time <- round(data1$time)
+data2$time <- round(data2$time)
+data3$time <- round(data3$time)
+data4$time <- round(data4$time)
+data5$time <- round(data5$time)
+
+write.csv(data1, "Data_site_1.csv", row.names = FALSE)
+write.csv(data2, "Data_site_2.csv", row.names = FALSE)
+write.csv(data3, "Data_site_3.csv", row.names = FALSE)
+write.csv(data4, "Data_site_4.csv", row.names = FALSE)
+write.csv(data5, "Data_site_5.csv", row.names = FALSE)
