@@ -24,4 +24,4 @@ Important notes:
 
 The two first column must be named "time" and "status" (order not important)
 
-Works only with complete data (incomplete data with NA values will not make the code crash, but will induce calculation errors)
+Works only with complete data (incomplete data with NA values will not make the code crash, but will indice calculation errors)

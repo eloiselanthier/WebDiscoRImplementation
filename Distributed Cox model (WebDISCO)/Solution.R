@@ -9,6 +9,7 @@ data3 <- read.csv("Data_site_3.csv")
 data <- rbind(data1, data2, data3)
 data
 
-res.cox <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, data)
+#res.cox <- coxph(Surv(time, status) ~ age + sex + ph.ecog + ph.karno + pat.karno + meal.cal + wt.loss, data)
+res.cox <- coxph(Surv(time, status) ~ X1 + X2 + X3, data) #+ X4 + X5 + X6 + X7 + X8 + X9 + X10
 res.cox
 summary(res.cox)

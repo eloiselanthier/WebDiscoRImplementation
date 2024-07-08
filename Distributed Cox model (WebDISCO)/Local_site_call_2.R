@@ -80,7 +80,7 @@ if (k >= 0) {
   } else if (!file.exists(paste0("Dik", manualk ,".csv"))) {              # If global times file exists -- call second function
     source("Local_site_core_params.R")
     parameters_sites(manualwd, k, nbBetas)
-  } else if (file.exists("Beta_1_output.csv")) {        # If beta file exists --- call third function
+  } else if (file.exists("Beta_1_output.csv")) {                          # If beta file exists --- call third function
     # Must use the last available beta
     files <- list.files(pattern = "Beta_\\d+_output.csv")
     numbers <- as.numeric(gsub("Beta_(\\d+)_output.csv", "\\1", files))
@@ -93,5 +93,5 @@ if (k >= 0) {
 }
 
 ## Remove all environment variables. 
-## If you want to see the variable that were create, simply don't execute that line (and clear them manually after)
+## If you want to see the variable that were created, simply don't execute that line (and clear them manually after)
 rm(list = ls())

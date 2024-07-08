@@ -13,10 +13,10 @@ library("survminer")
 manualwd <- -1
 
 # If you want to override the node numbering based on filename, input 0 or a positive integer here
-manualk <- 3
+manualk <- ... # Input the site number here
 
 # Number of parameters (covariates)
-nbBetas <- 3
+nbBetas <- ... # Input the number of betas here
 
 # No modifications should be required below this point
 ###########################

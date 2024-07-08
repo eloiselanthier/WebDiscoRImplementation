@@ -58,7 +58,7 @@ if (!file.exists("Global_times_output.csv")) {
 }
 
 # Next step: global initialization and first beta
-if (file.exists(paste0("Dik", K, ".csv"))) {
+if (file.exists(paste0("Dik", K, ".csv")) && !file.exists("Beta_1_output.csv")) {
   
   sumZrGlobal_int <- 0
   
@@ -72,11 +72,12 @@ if (file.exists(paste0("Dik", K, ".csv"))) {
     sumZrh <- read.csv(paste0("sumZrh", i, ".csv"))
     sumZrGlobal_int <- sumZrGlobal_int + colSums(sumZrh)
   }
+  
+  write.csv(normDikGlobal, file="normDikGlobal.csv", row.names = FALSE)
+  write.csv(sumZrGlobal_int, file="sumZrGlobal_int.csv", row.names = FALSE)
 
-  if (!file.exists("Beta_1_output.csv")){
-    beta <- rep(0, nbBetas)
-    write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
-  }
+  beta <- rep(0, nbBetas)
+  write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
   
 }
 
@@ -117,6 +118,9 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
     }
     
     # Calculate first derivative
+    normDikGlobal <- as.matrix(read.csv("normDikGlobal.csv"))
+    sumZrGlobal_int <- as.matrix(read.csv("sumZrGlobal_int.csv"))
+    
     ZrExp_Exp <- sumZqExpGlobal/do.call(cbind, replicate(nbBetas, sumExpGlobal, simplify = FALSE))
     Norm_ZrExp_Exp <- do.call(cbind, replicate(nbBetas, normDikGlobal, simplify = FALSE)) * ZrExp_Exp
     sumDi_Norm_ZrExp_Exp <- colSums(Norm_ZrExp_Exp)
