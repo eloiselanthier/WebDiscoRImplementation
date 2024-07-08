@@ -61,35 +61,43 @@ calculate_local_values <- function(man_wd=-1,nodeid=-1, nodebetas=-1, nodenumber
     # Get id of people still in the study
     indices <- as.numeric(unlist(Rik[i, ])[unlist(Rik[i, ]) != ""])
     
-    # Get covariates of subjects
-    z_matrix <- node_data[indices, 3:ncol(node_data)]
-    
-    # Convert to matrix to use sweep function
-    z_matrix <- as.matrix(z_matrix)
-    beta <- as.matrix(beta)
-    
-    # Beta * z
-    beta_z <- sweep(z_matrix, 2, beta, "*")
-    beta_z_sum <- rowSums(beta_z)
-    
-    # 1 - exp(beta*z)
-    exp_beta_z <- exp(beta_z_sum)
-    
-    # 2 - zq*exp(beta*z)
-    exp_beta_z_matrix <- matrix(rep(exp_beta_z, ncol(z_matrix)), ncol = ncol(z_matrix), byrow = FALSE)
-    z_exp_beta_z <-  z_matrix * exp_beta_z_matrix
-    
-    # 3 - zr*zq*exp(beta*z)
-    outer_product <- outer(z_matrix, t(z_matrix), "*")
-    matrix_list <- lapply(1:nrow(outer_product), function(j) outer_product[j,,,j])
-    result_array <- array(unlist(matrix_list), dim = c(ncol(z_matrix), ncol(z_matrix), nrow(z_matrix)))
-    
-    zr_zq_beta <- exp_beta_z * result_array
-    
-    # Update sumExp, sumZqExp, and sumZqZrExp
-    sumExp[i] <- sum(exp_beta_z)
-    sumZqExp[i, ] <- colSums(z_exp_beta_z)
-    sumZqZrExp[, , i] <- apply(zr_zq_beta, c(1, 2), sum)
+    if(length(indices) > 0){
+      
+      # Get covariates of subjects
+      z_matrix <- node_data[indices, 3:ncol(node_data)]
+
+      # Convert to matrix to use sweep function
+      z_matrix <- as.matrix(z_matrix)
+      beta <- as.matrix(beta)
+      
+      # Beta * z
+      beta_z <- sweep(z_matrix, 2, beta, "*")
+      beta_z_sum <- rowSums(beta_z)
+      
+      # 1 - exp(beta*z)
+      exp_beta_z <- exp(beta_z_sum)
+      
+      # 2 - zq*exp(beta*z)
+      exp_beta_z_matrix <- matrix(rep(exp_beta_z, ncol(z_matrix)), ncol = ncol(z_matrix), byrow = FALSE)
+      z_exp_beta_z <-  z_matrix * exp_beta_z_matrix
+      
+      # 3 - zr*zq*exp(beta*z)
+      outer_product <- outer(z_matrix, t(z_matrix), "*")
+      matrix_list <- lapply(1:nrow(outer_product), function(j) outer_product[j,,,j])
+      result_array <- array(unlist(matrix_list), dim = c(ncol(z_matrix), ncol(z_matrix), nrow(z_matrix)))
+      
+      zr_zq_beta <- exp_beta_z * result_array
+      
+      # Update sumExp, sumZqExp, and sumZqZrExp
+      sumExp[i] <- sum(exp_beta_z)
+      sumZqExp[i, ] <- colSums(z_exp_beta_z)
+      sumZqZrExp[, , i] <- apply(zr_zq_beta, c(1, 2), sum)
+    }
+    else {
+      sumExp[i] <- 0
+      sumZqExp[i, ] <- rep(0, nbBetas)
+      sumZqZrExp[, , i] <- matrix(0, nrow = nbBetas, ncol = nbBetas)
+    }
   }
 
   # Write in csv

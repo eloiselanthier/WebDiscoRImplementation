@@ -7,13 +7,14 @@
 # Includes
 library("survival")
 library("survminer")
+library("MASS")
 
 # If you want to skip the automated working directory setting, input 1 here. 
 # If you do so, make sure the working directory is set correctly manualy.
 manualwd <- -1
 
 # Number of parameters (covariates)
-nbBetas <- 3
+nbBetas <- 10 # Input the number of betas here
 
 if (manualwd != 1) {
   
@@ -149,7 +150,7 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
     }
     
     # Calculate new beta
-    lrq_beta_inv <- solve(lrq_beta)
+    lrq_beta_inv <- ginv(lrq_beta) # Inverse de la matrice: solve(lrq_beta), ginv = pseudoinverse
     betaT <- matrix(as.numeric(lr_beta), nrow = nbBetas, ncol = 1)
     
     beta <- beta - lrq_beta_inv %*% betaT
