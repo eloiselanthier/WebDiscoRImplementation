@@ -1,4 +1,7 @@
 # WebDiscoRImplementation
+
+!!! This repository contains all files used to develop the distributed Cox model method. It is not the final product. Go to the repository "Distrib_survival_analysis" for that. !!!
+
 WebDISCO algorithm implemented in R
 
 Folder "Distributed Cox model (WebDISCO)" contains files for distributed Cox model, with global server and local sites. Read Instructions pour utilisation du code before usage.
