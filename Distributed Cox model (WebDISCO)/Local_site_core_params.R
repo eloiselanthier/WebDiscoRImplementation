@@ -47,27 +47,30 @@ parameters_sites <- function(man_wd=-1,nodeid=-1, nodebetas=-1) {
   Dlist <- read.csv("Global_times_output.csv")
   Dlist <- Dlist$x
   
+  # Dik: list containing the index sets of subjects with observed events at time i
   Dik <- vector("list", length(Dlist))
   for (i in seq_along(Dlist)) {
     indices <- which(node_data$time == Dlist[i] & node_data$status == 1)
     if (length(indices) > 0) {
       Dik[[i]] <- indices
     } else {
-      Dik[[i]] <- 0  # Assign NULL instead of integer(0)
+      Dik[[i]] <- 0
     }
   }
   
+  # Rik: list containing the id of subjects still at risk at time i
   Rik <- vector("list", length(Dlist))
   for (i in seq_along(Dlist)) {
     Rik[[i]] <- which(node_data$time >= Dlist[i])
   }
-
-  sumZrh <- matrix(0, nrow = length(Dik), ncol = nbBetas)
+  
+  # Sum of covariates associated with subjects with observed events at time i (Dik)
+  sumZr <- matrix(0, nrow = length(Dik), ncol = nbBetas)
   for (i in seq_along(Dik)) {
     indices <- Dik[[i]]
     for (x in 1:nbBetas) {
       current_sum <- sum(node_data[[3 + x - 1]][indices])           
-      sumZrh[i, x] <- ifelse(is.na(current_sum), 0, current_sum)      # if NA, put = 0 (might induce errors, but avoids crashing)
+      sumZr[i, x] <- ifelse(is.na(current_sum), 0, current_sum)      # if NA, put = 0 (might induce errors, but avoids crashing)
     }
   }
   
@@ -95,9 +98,10 @@ parameters_sites <- function(man_wd=-1,nodeid=-1, nodebetas=-1) {
   padded_rows <- lapply(Rik, pad_with_na, max_length)
   df2 <- as.data.frame(do.call(rbind, padded_rows))
   
+  # Write
   write.csv(df, file=paste0("Dik",k,".csv"),row.names = FALSE,na="")
   write.csv(df2, file=paste0("Rik",k,".csv"),row.names = FALSE,na="")
-  write.csv(sumZrh, file=paste0("sumZrh",k,".csv"),row.names = FALSE,na="")
+  write.csv(sumZr, file=paste0("sumZr",k,".csv"),row.names = FALSE,na="")
 
   rm(list = ls())
   

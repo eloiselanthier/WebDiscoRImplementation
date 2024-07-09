@@ -16,7 +16,7 @@ manualwd <- -1
 manualk <- 2
 
 # Number of parameters (covariates)
-nbBetas <- 3
+nbBetas <- 10
 
 # No modifications should be required below this point
 ###########################

@@ -7,13 +7,14 @@
 # Includes
 library("survival")
 library("survminer")
+library("MASS")
 
 # If you want to skip the automated working directory setting, input 1 here. 
 # If you do so, make sure the working directory is set correctly manualy.
 manualwd <- -1
 
 # Number of parameters (covariates)
-nbBetas <- 3
+nbBetas <- 10 # Input the number of betas here
 
 if (manualwd != 1) {
   
@@ -44,23 +45,24 @@ K=length(list.files(pattern="Times_[[:digit:]]+_output.csv"))
 # First step: finding global times
 if (!file.exists("Global_times_output.csv")) {
   
+  # Read local times
   times_list <- list()
-  
   for (k in 1:K) {
     times_list[[k]] <- read.csv(paste0("Times_", k, "_output.csv"))
   }
   
+  # Combine and get global times
   combined_times <- do.call(c, lapply(times_list, function(df) unlist(df)))
-  Dlist <- sort(unique(combined_times))
+  Times_list <- sort(unique(combined_times))
   
-  write.csv(Dlist, file="Global_times_output.csv", row.names = FALSE)
+  write.csv(Times_list, file="Global_times_output.csv", row.names = FALSE)
 
 }
 
 # Next step: global initialization and first beta
 if (file.exists(paste0("Dik", K, ".csv")) && !file.exists("Beta_1_output.csv")) {
   
-  sumZrGlobal_int <- 0
+  sumZrGlobal <- 0
   
   for(i in 1:K){
     Dik <- read.csv(paste0("Dik", i, ".csv"), header = FALSE, blank.lines.skip = FALSE)
@@ -69,13 +71,14 @@ if (file.exists(paste0("Dik", K, ".csv")) && !file.exists("Beta_1_output.csv")) 
     }
     normDikGlobal <- normDikGlobal + apply(Dik, 1, function(row) sum(row != ""))[-1]
 
-    sumZrh <- read.csv(paste0("sumZrh", i, ".csv"))
-    sumZrGlobal_int <- sumZrGlobal_int + colSums(sumZrh)
+    sumZr <- read.csv(paste0("sumZr", i, ".csv"))
+    sumZrGlobal <- sumZrGlobal + colSums(sumZr)
   }
   
   write.csv(normDikGlobal, file="normDikGlobal.csv", row.names = FALSE)
-  write.csv(sumZrGlobal_int, file="sumZrGlobal_int.csv", row.names = FALSE)
+  write.csv(sumZrGlobal, file="sumZrGlobal.csv", row.names = FALSE)
 
+  #beta <- c(-0.03, 0.006, 0.03)
   beta <- rep(0, nbBetas)
   write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
   
@@ -90,13 +93,15 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
   ite <- max(numbers)
   
   # Verification to make sure new data is used to compute beta
-  if (file.exists((paste0("sumExp1_output_", ite, ".csv")))){
+  if (file.exists((paste0("sumExp", K, "_output_", ite, ".csv")))){
     
     # Get old beta
     beta <-  read.csv(paste0("Beta_", ite, "_output.csv"))
     
     # Read files and sum values
     for(i in 1:K){
+      
+      # Retrieve data
       sumExp <- read.csv(paste0("sumExp", i, "_output_", ite, ".csv"), header = FALSE, blank.lines.skip = FALSE)
       sumExp <- matrix(as.numeric(as.matrix(sumExp[-1, ])), ncol = 1, byrow = FALSE)
       
@@ -106,12 +111,14 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
       sumZqZrExp <- read.csv(paste0("sumZqZrExp", i, "_output_", ite, ".csv"), header = FALSE, blank.lines.skip = FALSE)
       sumZqZrExp <- array(as.numeric(as.matrix(sumZqZrExp[-1, ])), dim = c(nbBetas, nbBetas, ncol(sumZqZrExp)))
       
+      # Initialise global matrices if first iteration
       if(i == 1){
         sumExpGlobal <- matrix(0, nrow = nrow(sumExp), ncol = ncol(sumExp))
         sumZqExpGlobal <- matrix(0, nrow = nrow(sumZqExp), ncol = ncol(sumZqExp))
         sumZqZrExpGlobal <- array(0, dim = dim(sumZqZrExp))
       }
       
+      # Sum values
       sumExpGlobal <- sumExpGlobal + sumExp
       sumZqExpGlobal <- sumZqExpGlobal + sumZqExp
       sumZqZrExpGlobal <- sumZqZrExpGlobal + sumZqZrExp
@@ -119,17 +126,18 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
     
     # Calculate first derivative
     normDikGlobal <- as.matrix(read.csv("normDikGlobal.csv"))
-    sumZrGlobal_int <- as.matrix(read.csv("sumZrGlobal_int.csv"))
+    sumZrGlobal <- as.matrix(read.csv("sumZrGlobal.csv"))
     
-    ZrExp_Exp <- sumZqExpGlobal/do.call(cbind, replicate(nbBetas, sumExpGlobal, simplify = FALSE))
-    Norm_ZrExp_Exp <- do.call(cbind, replicate(nbBetas, normDikGlobal, simplify = FALSE)) * ZrExp_Exp
-    sumDi_Norm_ZrExp_Exp <- colSums(Norm_ZrExp_Exp)
+    ZrExp_Divided_by_Exp <- sumZqExpGlobal/do.call(cbind, replicate(nbBetas, sumExpGlobal, simplify = FALSE))
+    Norm_Times_ZrExp_Divided_by_Exp <- do.call(cbind, replicate(nbBetas, normDikGlobal, simplify = FALSE)) * ZrExp_Divided_by_Exp
+    sum_Norm_Times_ZrExp_Divided_by_Exp <- colSums(Norm_Times_ZrExp_Divided_by_Exp)
     
-    lr_beta = sumZrGlobal_int - sumDi_Norm_ZrExp_Exp
+    lr_beta = sumZrGlobal - sum_Norm_Times_ZrExp_Divided_by_Exp
     
     # Calculate second derivative
     lrq_beta <- matrix(NA, nrow = nbBetas, ncol = nbBetas)
     
+    # a, b and c are the three division present in the equation
     for (i in 1:nbBetas) {
       for (j in 1:nbBetas) {
         a <- sumZqZrExpGlobal[i, j, ] / sumExpGlobal
@@ -137,16 +145,16 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
         c <- sumZqExpGlobal[, j] / sumExpGlobal
         
         value_ij <- a - b * c
-        Norm_value_ij <- normDikGlobal * value_ij
-        lrq_beta[i, j] <- -sum(Norm_value_ij)
+        Norm_times_value_ij <- normDikGlobal * value_ij
+        lrq_beta[i, j] <- -sum(Norm_times_value_ij)
       }
     }
     
     # Calculate new beta
-    lrq_beta_inv <- solve(lrq_beta)
+    lrq_beta_inv <- ginv(lrq_beta) # Inverse de la matrice: solve(lrq_beta), ginv = pseudoinvers
     betaT <- matrix(as.numeric(lr_beta), nrow = nbBetas, ncol = 1)
     
-    beta <- beta - lrq_beta_inv %*% betaT
+    beta <- beta - (lrq_beta_inv %*% betaT)
     
     # Write in csv to max_number+1
     write.csv(beta, file=paste0("Beta_", ite+1, "_output.csv"), row.names = FALSE)
