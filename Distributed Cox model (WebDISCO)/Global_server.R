@@ -42,7 +42,7 @@ if (manualwd != 1) {
 
 K=length(list.files(pattern="Times_[[:digit:]]+_output.csv"))
 
-# First step: finding global times
+# First step: initialization
 if (!file.exists("Global_times_output.csv")) {
   
   # Read local times
@@ -54,43 +54,78 @@ if (!file.exists("Global_times_output.csv")) {
   # Combine and get global times
   combined_times <- do.call(c, lapply(times_list, function(df) unlist(df)))
   Times_list <- sort(unique(combined_times))
-  
   write.csv(Times_list, file="Global_times_output.csv", row.names = FALSE)
-
-}
-
-# Next step: global initialization and first beta
-if (file.exists(paste0("Dik", K, ".csv")) && !file.exists("Beta_1_output.csv")) {
   
-  sumZrGlobal <- 0
-  
-  for(i in 1:K){
-    Dik <- read.csv(paste0("Dik", i, ".csv"), header = FALSE, blank.lines.skip = FALSE)
-    if(i == 1){
-      normDikGlobal <- matrix(0, nrow = nrow(Dik)-1, ncol = 1)
+  # Here, we try the inverse variance method for beta initial. If it fails, beta is initialized with a simple average.
+  tryCatch({
+    Bk_list <- list()
+    Vk_list <- list()
+    Vk_inv_list <- list()
+    
+    # Read matrices from files and calculate inverses
+    for (k in 1:K) {
+      Bk_list[[k]] <- as.matrix(read.csv(paste0("Beta_local_", k, ".csv")))
+      Vk_list[[k]] <- as.matrix(read.csv(paste0("Vk_", k, ".csv")))
+      Vk_inv_list[[k]] <- solve(Vk_list[[k]])
     }
-    normDikGlobal <- normDikGlobal + apply(Dik, 1, function(row) sum(row != ""))[-1]
+    
+    # Initialize the sums
+    Vk_inv_sum <- matrix(0, nrow=nrow(Vk_inv_list[[1]]), ncol=ncol(Vk_inv_list[[1]]))
+    Vk_inv_Bk_sum <- matrix(0, nrow=nrow(Vk_inv_list[[1]]), ncol=ncol(Bk_list[[1]]))
 
-    sumZr <- read.csv(paste0("sumZr", i, ".csv"))
-    sumZrGlobal <- sumZrGlobal + colSums(sumZr)
-  }
-  
-  write.csv(normDikGlobal, file="normDikGlobal.csv", row.names = FALSE)
-  write.csv(sumZrGlobal, file="sumZrGlobal.csv", row.names = FALSE)
-
-  #beta <- c(-0.03, 0.006, 0.03)
-  beta <- rep(0, nbBetas)
-  write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
+    # Sum the matrices
+    for (k in 1:K) {
+      Vk_inv_sum <- Vk_inv_sum + Vk_inv_list[[k]]
+      Vk_inv_Bk_sum <- Vk_inv_Bk_sum + Vk_inv_list[[k]] %*% Bk_list[[k]]
+    }
+    
+    beta <- t(Vk_inv_Bk_sum) %*% solve(Vk_inv_sum)
+    write.csv(t(beta), file="Beta_1_output.csv", row.names = FALSE)
+    
+  }, error = function(e) {
+    # Alternative actions in case of failure
+    message("Initial beta estimate done with simple averaging method, as an error occured trying the inverse variance weighted initial estimator.\n", e$message)
+    
+    beta_sum <- matrix(0, nbBetas, 1)
+    total_subjects <- 0
+    for (k in 1:K) {
+      local_subjects <- as.integer(read.csv(paste0("Number_of_subjects_site_", k, ".csv")))
+      total_subjects <- total_subjects + local_subjects
+      beta_sum <- beta_sum + local_subjects * as.matrix(read.csv(paste0("Beta_local_", k, ".csv")))
+    }
+    beta <- beta_sum/total_subjects
+    
+    write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
+  })
   
 }
 
-# Last step: Calculate derivatives and new beta
-if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
+# Iterations: Calculate derivatives and new beta
+if (file.exists("sumExp1_output_1.csv") ) {
   
   # Must use the last available data
   files <- list.files(pattern = "Beta_\\d+_output.csv")
   numbers <- as.numeric(gsub("Beta_(\\d+)_output.csv", "\\1", files))
   ite <- max(numbers)
+  
+  # First iteration - some more initialization
+  if (ite == 1){
+    sumZrGlobal <- 0
+    
+    for(i in 1:K){
+      normDik <- read.csv(paste0("Dik", i, ".csv"), header = FALSE, blank.lines.skip = FALSE)
+      if(i == 1){
+        normDikGlobal <- matrix(0, nrow = nrow(normDik)-1, ncol = 1)
+      }
+      normDikGlobal <- normDikGlobal + matrix(as.numeric(as.matrix(normDik[-1, ])), ncol = 1, byrow = FALSE)
+      
+      sumZr <- read.csv(paste0("sumZr", i, ".csv"))
+      sumZrGlobal <- sumZrGlobal + colSums(sumZr)
+    }
+    
+    write.csv(normDikGlobal, file="normDikGlobal.csv", row.names = FALSE)
+    write.csv(sumZrGlobal, file="sumZrGlobal.csv", row.names = FALSE)
+  }
   
   # Verification to make sure new data is used to compute beta
   if (file.exists((paste0("sumExp", K, "_output_", ite, ".csv")))){
@@ -132,7 +167,7 @@ if (file.exists("Beta_1_output.csv") & file.exists("sumExp1_output_1.csv") ) {
     Norm_Times_ZrExp_Divided_by_Exp <- do.call(cbind, replicate(nbBetas, normDikGlobal, simplify = FALSE)) * ZrExp_Divided_by_Exp
     sum_Norm_Times_ZrExp_Divided_by_Exp <- colSums(Norm_Times_ZrExp_Divided_by_Exp)
     
-    lr_beta = sumZrGlobal - sum_Norm_Times_ZrExp_Divided_by_Exp
+    lr_beta <- sumZrGlobal - sum_Norm_Times_ZrExp_Divided_by_Exp
     
     # Calculate second derivative
     lrq_beta <- matrix(NA, nrow = nbBetas, ncol = nbBetas)
