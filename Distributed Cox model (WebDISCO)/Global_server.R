@@ -4,17 +4,15 @@
 ## License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 ## Copyright: GRIIS / Université de Sherbrooke
 
-# Includes
-library("survival")
-library("survminer")
-library("MASS")
+# Loading packages and setting up core variables --------------------------
+library("survival")          # Contains the core survival analysis routines                      
 
 # If you want to skip the automated working directory setting, input 1 here. 
 # If you do so, make sure the working directory is set correctly manualy.
 manualwd <- -1
 
 # Number of parameters (covariates)
-nbBetas <- 10 # Input the number of betas here
+nbBetas <- 3 # Input the number of betas here
 
 if (manualwd != 1) {
   
@@ -40,6 +38,8 @@ if (manualwd != 1) {
 
 # ------------------------- CODE STARTS HERE ------------------------
 
+# Calculate number of data nodes from files fiting the pattern in the working directory
+# This assumes unique event times outputs have a name like Times_[[:digit:]]+_output.csv
 K=length(list.files(pattern="Times_[[:digit:]]+_output.csv"))
 
 # First step: initialization
@@ -56,7 +56,8 @@ if (!file.exists("Global_times_output.csv")) {
   Times_list <- sort(unique(combined_times))
   write.csv(Times_list, file="Global_times_output.csv", row.names = FALSE)
   
-  # Here, we try the inverse variance method for beta initial. If it fails, beta is initialized with a simple average.
+  # Here, we try the inverse variance method for beta initialization.
+  # If it fails (singular matrix), beta is initialized with a simple average.
   tryCatch({
     Bk_list <- list()
     Vk_list <- list()
@@ -80,11 +81,10 @@ if (!file.exists("Global_times_output.csv")) {
     }
     
     beta <- t(Vk_inv_Bk_sum) %*% solve(Vk_inv_sum)
-    write.csv(t(beta), file="Beta_1_output.csv", row.names = FALSE)
+    write.csv(t(beta), file="Beta_0_output.csv", row.names = FALSE)
     
   }, error = function(e) {
-    # Alternative actions in case of failure
-    message("Initial beta estimate done with simple averaging method, as an error occured trying the inverse variance weighted initial estimator.\n", e$message)
+    message("Warning: Initial beta estimate done with simple averaging method, as an error occured trying the inverse variance weighted initial estimator.\n", e$message)
     
     beta_sum <- matrix(0, nbBetas, 1)
     total_subjects <- 0
@@ -95,25 +95,27 @@ if (!file.exists("Global_times_output.csv")) {
     }
     beta <- beta_sum/total_subjects
     
-    write.csv(beta, file="Beta_1_output.csv", row.names = FALSE)
+    write.csv(beta, file="Beta_0_output.csv", row.names = FALSE)
   })
   
 }
 
 # Iterations: Calculate derivatives and new beta
 if (file.exists("sumExp1_output_1.csv") ) {
-  
   # Must use the last available data
   files <- list.files(pattern = "Beta_\\d+_output.csv")
   numbers <- as.numeric(gsub("Beta_(\\d+)_output.csv", "\\1", files))
   ite <- max(numbers)
   
+  ite <- ite + 1
+  
   # First iteration - some more initialization
   if (ite == 1){
+    
     sumZrGlobal <- 0
     
     for(i in 1:K){
-      normDik <- read.csv(paste0("Dik", i, ".csv"), header = FALSE, blank.lines.skip = FALSE)
+      normDik <- read.csv(paste0("normDik", i, ".csv"), header = FALSE, blank.lines.skip = FALSE)
       if(i == 1){
         normDikGlobal <- matrix(0, nrow = nrow(normDik)-1, ncol = 1)
       }
@@ -131,7 +133,7 @@ if (file.exists("sumExp1_output_1.csv") ) {
   if (file.exists((paste0("sumExp", K, "_output_", ite, ".csv")))){
     
     # Get old beta
-    beta <-  read.csv(paste0("Beta_", ite, "_output.csv"))
+    beta <-  read.csv(paste0("Beta_", ite-1, "_output.csv"))
     
     # Read files and sum values
     for(i in 1:K){
@@ -146,7 +148,7 @@ if (file.exists("sumExp1_output_1.csv") ) {
       sumZqZrExp <- read.csv(paste0("sumZqZrExp", i, "_output_", ite, ".csv"), header = FALSE, blank.lines.skip = FALSE)
       sumZqZrExp <- array(as.numeric(as.matrix(sumZqZrExp[-1, ])), dim = c(nbBetas, nbBetas, ncol(sumZqZrExp)))
       
-      # Initialise global matrices if first iteration
+      # Initialize global matrices if first iteration
       if(i == 1){
         sumExpGlobal <- matrix(0, nrow = nrow(sumExp), ncol = ncol(sumExp))
         sumZqExpGlobal <- matrix(0, nrow = nrow(sumZqExp), ncol = ncol(sumZqExp))
@@ -185,14 +187,21 @@ if (file.exists("sumExp1_output_1.csv") ) {
       }
     }
     
-    # Calculate new beta
-    lrq_beta_inv <- ginv(lrq_beta) # Inverse de la matrice: solve(lrq_beta), ginv = pseudoinvers
-    betaT <- matrix(as.numeric(lr_beta), nrow = nbBetas, ncol = 1)
+    # Try to inverse matrix with solve()
+    # if it fails (singular matrix), use the pseudo inverse ginv()
+    tryCatch({
+      lrq_beta_inv <- solve(lrq_beta)
+    }, error = function(e) {
+      message("Warning: Pseudo inverse used to invert the matrix.\n", e$message)
+      lrq_beta_inv <- ginv(lrq_beta)
+    })
     
-    beta <- beta - (lrq_beta_inv %*% betaT)
+    lr_beta <- matrix(as.numeric(lr_beta), nrow = nbBetas, ncol = 1)
+    
+    beta <- beta - (lrq_beta_inv %*% lr_beta)
     
     # Write in csv to max_number+1
-    write.csv(beta, file=paste0("Beta_", ite+1, "_output.csv"), row.names = FALSE)
+    write.csv(beta, file=paste0("Beta_", ite, "_output.csv"), row.names = FALSE)
     
   } else {
     print("New values must be computed locally in order to do another iteration.")
