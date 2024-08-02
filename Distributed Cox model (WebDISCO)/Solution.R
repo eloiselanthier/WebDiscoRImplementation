@@ -12,7 +12,7 @@ data <- rbind(data1, data2)
 
 column_indices <- (3:(nbBetas + 2))
 formula <- as.formula(paste("Surv(time, status) ~", paste(paste0("data[,", column_indices, "]"), collapse = " + ")))
-res.cox <- coxph(formula, data)
+res.cox <- coxph(formula, data, ties = "breslow")
 summary(res.cox)
 
 
@@ -25,3 +25,11 @@ summary(res.cox)
 #
 #write.csv(test1, file="Data_site_1.csv", row.names = FALSE)
 #write.csv(test2, file="Data_site_2.csv", row.names = FALSE)
+
+data1 <- read.csv("Data_site_1.csv")
+
+# Fit the Cox proportional hazards model
+res.cox <- coxph(Surv(time, status) ~ X1 + X2 + X3, data = data1, ties = "breslow")
+
+# Summarize the results
+summary(res.cox)
